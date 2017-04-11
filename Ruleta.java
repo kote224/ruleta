@@ -11,6 +11,8 @@ public class Ruleta extends Applet{
 	Ficha fichas[];
 	Ficha activo;
 	List <Ficha> valores;
+	boolean toca=false;
+	int cont;
 	ArrayList<Integer> numeros = new ArrayList<Integer>();
 	int rojos[]={1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36};
 	int negros[]={2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35};
@@ -27,7 +29,7 @@ public class Ruleta extends Applet{
     		ficha[i-1] = getImage(getCodeBase(), "fichas/ficha" + i+ ".png");
     	fichas = new Ficha[10];
     	for(int i=0; i<10; i++)
-    		fichas[i]=new Ficha(600,i*70+30,60,60,ficha[i],1);										//Le pasas los valores de las fichas
+    		fichas[i]=new Ficha(600,i*70+30,60,60,ficha[i],i+1,cont);										//Le pasas los valores de las fichas
     	
     		
     	//las casillas
@@ -59,7 +61,7 @@ public class Ruleta extends Applet{
     }
     public void update(Graphics g){
     	paint(g);										//evitar el parpadeo de la imagen pintando g y poniendo noseve en g
-    }
+    }   
     public boolean mouseDrag(Event ev,int x,int y){		//Al hacer drag, mueve solo la ficha ACTIVA
 		if(activo!=null){
 	    	activo.actualizar(x,y);						//al meter el puntero de la ficha,  llama a actualizar con el valor de esa ficha
@@ -71,7 +73,6 @@ public class Ruleta extends Applet{
     	for(int i=0;i<fichas.length;i++)		
 			if(fichas[i].contains(x,y)){			//si al clicar en una de las fichas, indica que es ESA FICHA
 				activo=fichas[i];					//activo tiene como puntero la ficha que has clicado
-				
 				repaint();
 			}
 		return true;
@@ -80,11 +81,25 @@ public class Ruleta extends Applet{
     	//for(int r=0;r<fichas.length;r++)
     		for(int i=0; i<3; i++)
     			for(int j=0; j<12; j++)
-					if(activo.intersects(casilla[i][j])){
-							numeros.add(((j*3)+i)+1);								//saber en que casilla esta la ficha y la guarda en la lista NÚMEROS 
-							System.out.print(numeros);
+    				if(activo!=null){
+						if(activo.intersects(casilla[i][j])){
+							numeros.add((casilla[i][j].valor));								//saber en que casilla esta la ficha y la guarda en la lista NÚMEROS 
+							toca = true;
+							activo.cont=cont;
+							System.out.print(numeros + "TOCA y el contador es " + activo.cont);
+							cont++;
 							break;
-					}
+						}
+						else
+							toca=false;
+    				}
+    		
+				if(toca==false){
+					numeros.remove(activo.cont);
+					
+					System.out.print(numeros + "NO toca y el contador es " + activo.cont);
+				}					
+		toca = false;
 		activo=null;
     	return true;
     }

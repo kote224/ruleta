@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.ArrayList;
 public class Ficha extends Rectangle{
 	Image imagen;
-	int valor=0;
-    public Ficha(int posx, int posy,int width, int height,Image img,int v) {	
+	int valor;
+	int cont;
+    public Ficha(int posx, int posy,int width, int height,Image img,int v, int contador) {	
     	super(posx,posy,width,height);    
     	imagen=img;
     	valor=v;
+    	cont=contador;
     	}
     public void dibujar(Graphics g,Applet a){
     	g.drawImage(imagen,x,y,width,height,a);
