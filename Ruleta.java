@@ -1,122 +1,158 @@
 import java.awt.*;
 import java.applet.*;
 import java.net.*;
-import java.util.List;
-import java.util.ArrayList;
+
 public class Ruleta extends Applet{
-	Graphics noseve;
+	public static final int NUM_JUGADAS = 10;
+	public static final int FILAS = 12;
+	public static final int COLUMNAS = 3;
+	Casilla casillas[][];
 	Image imagen;
-	Image ficha[];
-	Casilla casilla[][];
-	Ficha fichas[];
+	Graphics noseve;
+	public int rojos[] = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36};
+	public int valores[] = {1, 5, 10, 25, 50, 100, 500, 1000, 5000, 10000};
+	java.util.List<Integer> lRojos;
+	java.util.List<Ficha> fichas[];
 	Ficha activo;
-	List <Ficha> valores;
-	boolean toca=false;
-	int cont;
-	ArrayList<Integer> numeros = new ArrayList<Integer>();
-	int rojos[]={1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36};
-	int negros[]={2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35};
-	int valoresFichas[]={1,5,10,25,50,100,500,1000,5000,10000};
-	java.util.List <Integer> lRojos;
+	Image imgsFicha[];
+	int fila = -1;
+	int numeroSuerte;
 	Button boton;
-	int r;
+	int jugadas[];
+	int acumulas = 0;
+	int dinero = 1000000;
     public void init() {
-    	imagen = createImage(700, 900);
-    	noseve = imagen.getGraphics();
-    	//imagenes de fichas
-    	ficha = new Image[10];	
-    	for(int i=1; i<11; i++)
-    		ficha[i-1] = getImage(getCodeBase(), "fichas/ficha" + i+ ".png");
-    	fichas = new Ficha[10];
-    	for(int i=0; i<10; i++)
-    		fichas[i]=new Ficha(600,i*70+30,60,60,ficha[i],i+1,cont);										//Le pasas los valores de las fichas
-    	
-    		
-    	//las casillas
-     	casilla = new Casilla[3][12];
-     	lRojos = new java.util.ArrayList<Integer>();
-     	for(int cont=0;cont<rojos.length;cont++)
-     		lRojos.add(new Integer(rojos[cont]));
-     	for(int i=0; i<3; i++)
-    		for(int j=0; j<12; j++)
-    			casilla[i][j]= new Casilla(i*70+40,j*70+30,70,70,((j*3)+i)+1,Color.black);				//Aqui le pasas x,y,valor y color
-    	valores= new ArrayList<Ficha>();														//Valores al soltar el raton
+    	Panel panel = new Panel();
+    	boton = new Button("Jugar !");
+    	panel.add(boton);
     	this.setLayout(new BorderLayout());
-    	
-    	boton = new Button("PULSAME COOO");
-    	add(boton,BorderLayout.NORTH);
-    	
-     }
-    public void paint(Graphics g){
-    	noseve.setColor(Color.green);
-    	noseve.fillRect(0, 0, 700, 900);
-    	
-    	for(int i=0; i<3; i++)
-    		for(int j=0; j<12; j++)
-    			casilla[i][j].dibujar(noseve,i,j,rojos,negros);
-    	for(int i=0; i<10; i++)
-    		fichas[i].dibujar(noseve,this);
-    	noseve.drawString(""+r,300,300);
-    	g.drawImage(imagen, 0, 0, this);
-    }
-    public void update(Graphics g){
-    	paint(g);										//evitar el parpadeo de la imagen pintando g y poniendo noseve en g
-    }   
-    public boolean mouseDrag(Event ev,int x,int y){		//Al hacer drag, mueve solo la ficha ACTIVA
-		if(activo!=null){
-	    	activo.actualizar(x,y);						//al meter el puntero de la ficha,  llama a actualizar con el valor de esa ficha
-	    	repaint();
-		}
-    	return true;
-    }
-    public boolean mouseDown(Event ev, int x, int y){
-    	for(int i=0;i<fichas.length;i++)		
-			if(fichas[i].contains(x,y)){			//si al clicar en una de las fichas, indica que es ESA FICHA
-				activo=fichas[i];					//activo tiene como puntero la ficha que has clicado
-				repaint();
-			}
-		return true;
-    }   
-    public boolean mouseUp(Event ev, int x, int y){
-    	//for(int r=0;r<fichas.length;r++)
-    		for(int i=0; i<3; i++)
-    			for(int j=0; j<12; j++)
-    				if(activo!=null){
-						if(activo.intersects(casilla[i][j])){
-							numeros.add((casilla[i][j].valor));								//saber en que casilla esta la ficha y la guarda en la lista NÚMEROS 
-							toca = true;
-							activo.cont=cont;
-							System.out.print(numeros + "TOCA y el contador es " + activo.cont);
-							cont++;
-							break;
-						}
-						else
-							toca=false;
-    				}
-    		
-				if(toca==false){
-					numeros.remove(activo.cont);
+    	this.add("North", panel);
+    	imagen = createImage(700, 800);
+    	noseve = imagen.getGraphics();
+		lRojos = new java.util.ArrayList<Integer>();
+		for(int i=0; i<rojos.length; i++)
+			lRojos.add(new Integer(rojos[i]));
+			
+		casillas = new Casilla[FILAS][COLUMNAS];
+		for(int i=0; i<casillas.length; i++)
+			for(int j=0; j<casillas[i].length; j++)
+				if(lRojos.contains(new Integer((i*COLUMNAS)+j+1)))
+					casillas[i][j] = new Casilla((j*Casilla.DIM)+ 30, (i*Casilla.DIM)+ 50, (i*COLUMNAS)+j+1, Color.red);
+				else
+					casillas[i][j] = new Casilla((j*Casilla.DIM)+ 30, (i*Casilla.DIM)+ 50, (i*COLUMNAS)+j+1, Color.black);
 					
-					System.out.print(numeros + "NO toca y el contador es " + activo.cont);
-				}					
-		toca = false;
-		activo=null;
-    	return true;
+		imgsFicha = new Image[10];
+    	for(int i=0; i<10; i++)
+    		imgsFicha[i] = getImage(getCodeBase(), "Fichas/ficha" + (i+1) + ".png");
+    	
+    	fichas = new java.util.ArrayList[10];
+    	for(int i=0; i<fichas.length; i++){
+    		fichas[i] = new java.util.ArrayList<Ficha>();
+    		fichas[i].add(new Ficha(500, 175 + ((Ficha.DIM + 10)*i), valores[i], imgsFicha[i]));
+		}
+		
+		jugadas = new int[NUM_JUGADAS];
     }
     
-    public boolean action(Event ev, Object obj){
-    	if(ev.target instanceof Button){
-    		for(int cont=0;cont<1000;cont++){
-    			r=(int)(Math.random()*36);
-    			
-    			repaint();
-    		}
-    	for(int comp=0;comp< numeros.size();comp++)
-    				if(numeros.get(comp)==r)
-    					System.out.print("HAS GANAO COOOOOOO");
-    		return true;
+    public void paint(Graphics g){
+		noseve.setColor(Color.green);
+		noseve.fillRect(0, 0, 700, 800);
+		for(int i=0; i<casillas.length; i++)
+			for(int j=0; j<casillas[i].length; j++)
+				casillas[i][j].dibujar(noseve);
+		for(int i=0; i<fichas.length; i++)
+			for(int j=0; j<fichas[i].size(); j++)
+				fichas[i].get(j).dibujar(noseve, this);
+		String frase = "";
+		if(numeroSuerte % 2 == 0)
+			frase = "PAR";
+		else 
+			frase = "IMPAR";
+		if(numeroSuerte <= 18)
+			frase += " - FALTA";
+		else
+			frase += " - PASA";
+		if(lRojos.contains(new Integer(numeroSuerte))){
+			noseve.setColor(Color.red);
+			frase += " - ROJO";
+		}else{
+			noseve.setColor(Color.black);
+			frase += " - NEGRO";
+		}
+		
+		noseve.drawString("" + numeroSuerte, 400, 100);
+		noseve.setColor(Color.black);
+		noseve.drawString(frase, 300, 150);
+		
+		for(int i=0; i<NUM_JUGADAS; i++){
+			if (lRojos.contains(new Integer(jugadas[i])))	
+				noseve.setColor(Color.red);
+			else
+				noseve.setColor(Color.black);
+			noseve.drawString("" + jugadas[i], 600, 150+(i*30));
+		}
+		
+		noseve.drawString("Resultado jugada = " + acumulas, 270, 730);
+		noseve.drawString("Dinero = " + dinero, 270, 760);		
+		g.drawImage(imagen, 0, 0, this);
+    }
+
+    public void update(Graphics g){
+    	paint(g);
+    }
+    
+    public boolean mouseDrag(Event ev, int x, int y){
+    	if(activo != null){
+			activo.actualizar(x, y);
+			repaint();
     	}
+		return true;
+	}
     
-    	return false;
-    }
+	public boolean mouseDown(Event ev, int x, int y){
+		for(int i=0; i<fichas.length; i++)
+			for(int j=0; j<fichas[i].size(); j++)
+				if(fichas[i].get(j).contains(x, y)){
+					activo = fichas[i].get(j);
+					fila = i;
+				}
+		return true;
+	}
+
+	public boolean mouseUp(Event ev, int x, int y){
+		activo.cargar_apostados(casillas);
+		activo = null;
+		if(fila != -1){
+			fichas[fila].add(new Ficha(500, 175 + ((Ficha.DIM + 10)*fila), valores[fila], imgsFicha[fila]));
+			fila = -1;
+			repaint();
+		}			
+		return true;
+	}
+	
+	public boolean action(Event ev, Object obj){
+		if(ev.target instanceof Button){
+			numeroSuerte = (int)(Math.random()*37);
+			for(int i=NUM_JUGADAS-1; i>0; i--)
+				jugadas[i] = jugadas[i-1];
+			jugadas[0] = numeroSuerte;
+			
+			int apuestas = 0;
+			int ganas = 0;
+			for(int i=0; i<fichas.length; i++)
+				for(int j=0; j<fichas[i].size(); j++){
+					if(fichas[i].get(j).numeros_apostados.size()!=0)
+						apuestas += fichas[i].get(j).precio;
+					for(int k=0; k < fichas[i].get(j).numeros_apostados.size(); k++)
+						if(fichas[i].get(j).numeros_apostados.get(k).intValue() == numeroSuerte)
+							ganas += 36*(fichas[i].get(j).precio / fichas[i].get(j).numeros_apostados.size());
+				}
+			acumulas = ganas - apuestas;
+			dinero += acumulas;
+			repaint();
+			return true;
+		}
+		return false;
+	}
+	
 }
